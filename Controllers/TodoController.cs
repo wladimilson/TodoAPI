@@ -10,6 +10,7 @@ using TodoAPI.Repositories;
 namespace TodoAPI.Controllers
 {
     [Authorize]
+    [Produces("application/json")]
     [Route("api/[controller]")]
     [ApiController]
     public class TodoController : ControllerBase
@@ -19,7 +20,13 @@ namespace TodoAPI.Controllers
         public TodoController(IItemRepository repository){
             this._repository = repository;
         }
+
         // GET api/todo
+        /// <summary>
+        /// Lista os itens da To-do list.
+        /// </summary>
+        /// <returns>Os itens da To-do list</returns>
+        /// <response code="200">Returna os itens da To-do list cadastrados</response>
         [HttpGet]
         public ActionResult<List<Item>> Get()
         {
@@ -27,6 +34,13 @@ namespace TodoAPI.Controllers
         }
 
         // GET api/todo/5
+        /// <summary>
+        /// Obtém um item da To-do list.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns>Um item da To-do list</returns>
+        /// <response code="201">Returna o item encontrado</response>
+        /// <response code="404">Item não encontrado</response>
         [HttpGet("{id}")]
         public ActionResult<Item> Get(long id)
         {
@@ -38,6 +52,24 @@ namespace TodoAPI.Controllers
         }
 
         // POST api/todo
+        /// <summary>
+        /// Cria um item na To-do list.
+        /// </summary>
+        /// <remarks>
+        /// Exemplo:
+        ///
+        ///     POST /Todo
+        ///     {
+        ///        "id": 1,
+        ///        "name": "Item1",
+        ///        "iscomplete": true
+        ///     }
+        ///
+        /// </remarks>
+        /// <param name="value"></param>
+        /// <returns>Um novo item criado</returns>
+        /// <response code="201">Retorna o novo item criado</response>
+        /// <response code="400">Se o item não for criado</response>        
         [HttpPost]
         public ActionResult<Item> Post([FromBody] Item value)
         {
@@ -47,10 +79,29 @@ namespace TodoAPI.Controllers
             if(item != null)
                 return item;
             
-            return UnprocessableEntity();
+            return BadRequest();
         }
 
-        // PUT api/todo/5
+        // PUT api/todo/1
+        /// <summary>
+        /// Altera item da To-do list.
+        /// </summary>
+        /// <remarks>
+        /// Exemplo:
+        ///
+        ///     PUT /Todo/1
+        ///     {
+        ///        "id": 1,
+        ///        "name": "Item1",
+        ///        "iscomplete": true
+        ///     }
+        ///
+        /// </remarks>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <returns>O item alterado</returns>
+        /// <response code="201">Retorna o item alterado</response>
+        /// <response code="400">Se o item não for alterado</response>    
         [HttpPut("{id}")]
         public ActionResult<Item> Put(int id, [FromBody] Item value)
         {
@@ -58,17 +109,24 @@ namespace TodoAPI.Controllers
             if(item != null)
                 return item;
             
-            return UnprocessableEntity();
+            return BadRequest();
         }
 
         // DELETE api/todo/5
+        /// <summary>
+        /// Remove item da To-do list.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns>Uma mensagem de sucesso</returns>
+        /// <response code="200">Mensagem que o item foi excluído</response>
+        /// <response code="400">Se o item não for excluído</response>    
         [HttpDelete("{id}")]
         public ActionResult Delete(long id)
         {
             if(_repository.Remove(id))
                 return Ok(new { Description = "Item removed" });
 
-            return UnprocessableEntity();
+            return BadRequest();
         }
     }
 }

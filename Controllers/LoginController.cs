@@ -15,6 +15,7 @@ namespace TodoAPI.Controllers
     [ApiController]
     public class LoginController : ControllerBase
     {
+        [HttpPost]
         public ActionResult<string> Valid([FromBody] User user)
         {  
             if(user.Username.Equals("treinaweb") && user.Password.Equals("treinaweb"))
