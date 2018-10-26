@@ -28,6 +28,7 @@ namespace TodoAPI.Controllers
         /// <returns>Os itens da To-do list</returns>
         /// <response code="200">Returna os itens da To-do list cadastrados</response>
         [HttpGet]
+        [ProducesResponseType(200)]
         public ActionResult<List<Item>> Get()
         {
             return _repository.GetAll();
@@ -42,6 +43,8 @@ namespace TodoAPI.Controllers
         /// <response code="201">Returna o item encontrado</response>
         /// <response code="404">Item não encontrado</response>
         [HttpGet("{id}")]
+        [ProducesResponseType(201)]
+        [ProducesResponseType(400)]
         public ActionResult<Item> Get(long id)
         {
             var item = _repository.GetById(id);
@@ -71,6 +74,8 @@ namespace TodoAPI.Controllers
         /// <response code="201">Retorna o novo item criado</response>
         /// <response code="400">Se o item não for criado</response>        
         [HttpPost]
+        [ProducesResponseType(201)]
+        [ProducesResponseType(400)]
         public ActionResult<Item> Post([FromBody] Item value)
         {
             Console.WriteLine(value?.Name);
@@ -103,6 +108,8 @@ namespace TodoAPI.Controllers
         /// <response code="201">Retorna o item alterado</response>
         /// <response code="400">Se o item não for alterado</response>    
         [HttpPut("{id}")]
+        [ProducesResponseType(201)]
+        [ProducesResponseType(400)]
         public ActionResult<Item> Put(int id, [FromBody] Item value)
         {
             var item = _repository.Update(value);
@@ -121,6 +128,8 @@ namespace TodoAPI.Controllers
         /// <response code="200">Mensagem que o item foi excluído</response>
         /// <response code="400">Se o item não for excluído</response>    
         [HttpDelete("{id}")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
         public ActionResult Delete(long id)
         {
             if(_repository.Remove(id))
