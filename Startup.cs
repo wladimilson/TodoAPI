@@ -5,9 +5,12 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +19,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Swashbuckle.AspNetCore.Swagger;
+using TodoAPI.Checks;
 using TodoAPI.Data;
 using TodoAPI.Repositories;
 
@@ -100,6 +106,12 @@ namespace TodoAPI
 
                 opt.AddSecurityRequirement(security);
             });
+
+            services.AddHealthChecks()
+                    .AddDbContextCheck<TodoContext>()
+                    .AddSelfCheck("Self");
+            
+            services.AddHealthChecksUI();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -124,9 +136,40 @@ namespace TodoAPI
                 c.RoutePrefix = string.Empty;
             });
 
+            //Ativa o HealthChecks
+            app.UseHealthChecks("/status", new HealthCheckOptions()
+            {
+                // WriteResponse is a delegate used to write the response.
+                ResponseWriter = (httpContext, result) => {
+                    httpContext.Response.ContentType = "application/json";
+
+                    var json = new JObject(
+                        new JProperty("status", result.Status.ToString()),
+                        new JProperty("results", new JObject(result.Entries.Select(pair =>
+                            new JProperty(pair.Key, new JObject(
+                                new JProperty("status", pair.Value.Status.ToString()),
+                                new JProperty("description", pair.Value.Description),
+                                new JProperty("data", new JObject(pair.Value.Data.Select(
+                                    p => new JProperty(p.Key, p.Value))))))))));
+                    return httpContext.Response.WriteAsync(json.ToString(Formatting.Indented));
+                }
+            });
+
+            //Ativa o HealthChecks utilizado pelo HealthCheckUI
+            app.UseHealthChecks("/status-api", new HealthCheckOptions()
+            {
+                Predicate = _ => true,
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+            });
+
+            app.UseHealthChecksUI(opt => {
+                opt.UIPath = "/status-dashbord";
+            });
+
             app.UseAuthentication();
 
             app.UseHttpsRedirection();
+
             app.UseMvc();
         }
     }
